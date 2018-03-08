@@ -44,3 +44,7 @@ figure(ii+3)
 imshow(abs(im_mf(:,:,images(ii))),[])
 title(sprintf('Reconstruction at %d Hz', freqs(images(ii))))
 end
+
+%% 3. Field Map Based Reconstruction
+
+
