@@ -46,8 +46,10 @@ title(sprintf('Reconstruction at %d Hz', freqs(images(ii))))
 end
 
 %% 3. Field Map Based Reconstruction
+t = te + [0:ns-1]*tad/ns;
+t = t'; 
+t = repmat(t,1,ni);
+im_mf = zeros(n,n,nf);
 
+fm_recon_d = d1.*exp(-i*2*pi*
 
-im1_fm = im1.*exp(-1i*2*pi*fm);
-figure(9)
-imshow(abs(im1_fm),[])
