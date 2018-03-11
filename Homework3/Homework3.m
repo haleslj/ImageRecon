@@ -33,9 +33,19 @@ title('Reconstruction of 2nd echo');
 
 fm = compute_fm(im1, te1, im2, te2);
 
+% We want to look at the whole map first without masking out any
+% frequencies:
 subplot(1,3,3);
-imshow(fm, []);
+imshow(abs(fm), []);
 title('Field Map');
+
+% Limit our attention to pixels whose amplitude is greater than 10% of the
+% maximum
+msk = double(abs(im1) > .1*max(max(abs(im1))));
+
+% What range of frequencies do we observe?
+fprintf('Range of frequencies in field map: %f -> %f\n', ...
+    min(min(fm.*msk)),max(max(fm.*msk)));
 
 %% 2. Multfrequency Reconstruction 
 
