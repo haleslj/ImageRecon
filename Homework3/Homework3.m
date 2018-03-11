@@ -67,8 +67,19 @@ for ii = 1:numel(des_freqs)
 end
 
 %% 3. Field Map Based Reconstruction
+fms = round((fm - fmin)/fstep) + 1;
+fms = max(fms,1);
+fms = min(fms,numel(fs));
 
+im_mp = zeros(n,n);
+for ii = 1:n
+    for jj = 1:n
+        im_mp(ii,jj) = im_mf(ii,jj,fms(ii,jj));
+    end
+end
 
-im1_fm = im1.*exp(-1i*2*pi*fm);
-figure(9)
-imshow(abs(im1_fm),[])
+figure(3);
+imshow(abs(im_mp),[]);
+title('Map Based Reconstruction');
+
+%% (4) Autofocus Reconstruction
