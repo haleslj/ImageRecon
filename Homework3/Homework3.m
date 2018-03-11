@@ -3,29 +3,39 @@
 % Image Reconstruction 
 % Homework 3
 
-close all; clear all; 
+close all;
+clear;
 
-load('resphantom2.mat');
+load('resphantom2.mat'); clear ans;
 
 % Field Maps
-im1 = gridkb(d1, ks, wt, 160, 1, 4, 'image');
-im2 = gridkb(d2, ks, wt, 160, 1, 4, 'image');
-im1 = flipud(im1);
-im2 = flipud(im2);
+n = 160;
+osf = 2;
+kosf = 5;
 
-figure (1)
-imshow(abs(im1), [])
-title('Reconstruction of 1st echo')
+im1 = gridkb(d1, ks, wt, n, osf, kosf, 'image');
+im2 = gridkb(d2, ks, wt, n, osf, kosf, 'image');
 
-figure(2) 
-imshow(abs(im2),[])
-title('Reconstruction of 2nd echo')
+% Trim down to size and flip
+idy = round((.5*n*(osf-1)+1):(.5*n*(osf+1)));
+idx = fliplr(idy);
+im1 = im1(idx,idy);
+im2 = im2(idx,idy);
+
+figure(1);
+subplot(1,3,1);
+imshow(abs(im1), []);
+title('Reconstruction of 1st echo');
+
+subplot(1,3,2);
+imshow(abs(im2),[]);
+title('Reconstruction of 2nd echo');
 
 fm = compute_fm(im1, te1, im2, te2);
 
-figure (3)
-imshow(fm, [])
-title('Field Map')
+subplot(1,3,3);
+imshow(fm, []);
+title('Field Map');
 
 %% 2. Multfrequency Reconstruction 
 
