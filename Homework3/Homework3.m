@@ -49,20 +49,21 @@ fprintf('Range of frequencies in field map: %f -> %f\n', ...
 
 %% 2. Multfrequency Reconstruction 
 
-tad = 8.192e-3; 
+tad = size(d1,1)*samp;
 fmin = -128;
 fmax = 128; 
 fstep = 16; 
-n = 160; 
-images = [1, 5, 9, 13, 17];
+n = 160;
 
 im_mf = mf_recon(d1, ks, wt, n, te1, tad, fmin, fmax, fstep);
-freqs = fmin:fstep:fmax;
+fs = fmin:fstep:fmax;
 
-for ii = 1:length(images)
-figure(ii+3) 
-imshow(abs(im_mf(:,:,images(ii))),[])
-title(sprintf('Reconstruction at %d Hz', freqs(images(ii))))
+des_freqs = [ -128 -64 0 64 128 ];
+figure(2);
+for ii = 1:numel(des_freqs)
+    subplot(1,numel(des_freqs),ii);
+    imshow(abs(im_mf(:,:,fs == des_freqs(ii))),[]);
+    title(sprintf('@ %d Hz',des_freqs(ii)));
 end
 
 %% 3. Field Map Based Reconstruction
