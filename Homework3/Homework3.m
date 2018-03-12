@@ -3,51 +3,83 @@
 % Image Reconstruction 
 % Homework 3
 
-close all; clear all; 
+close all;
+clear;
 
-load('resphantom2.mat');
+load('resphantom2.mat'); clear ans;
 
 % Field Maps
-im1 = gridkb(d1, ks, wt, 160, 1, 4, 'image');
-im2 = gridkb(d2, ks, wt, 160, 1, 4, 'image');
-im1 = flipud(im1);
-im2 = flipud(im2);
+n = 160;
+osf = 2;
+kosf = 5;
 
-figure (1)
-imshow(abs(im1), [])
-title('Reconstruction of 1st echo')
+im1 = gridkb(d1, ks, wt, n, osf, kosf, 'image');
+im2 = gridkb(d2, ks, wt, n, osf, kosf, 'image');
 
-figure(2) 
-imshow(abs(im2),[])
-title('Reconstruction of 2nd echo')
+% Trim down to size and flip
+idy = round((.5*n*(osf-1)+1):(.5*n*(osf+1)));
+idx = fliplr(idy);
+im1 = im1(idx,idy);
+im2 = im2(idx,idy);
+
+figure(1);
+subplot(1,3,1);
+imshow(abs(im1), []);
+title('Reconstruction of 1st echo');
+
+subplot(1,3,2);
+imshow(abs(im2),[]);
+title('Reconstruction of 2nd echo');
 
 fm = compute_fm(im1, te1, im2, te2);
 
-figure (3)
-imshow(fm, [])
-title('Field Map')
+% We want to look at the whole map first without masking out any
+% frequencies:
+subplot(1,3,3);
+imshow(abs(fm), []);
+title('Field Map');
+
+% Limit our attention to pixels whose amplitude is greater than 10% of the
+% maximum
+msk = double(abs(im1) > .1*max(max(abs(im1))));
+
+% What range of frequencies do we observe?
+fprintf('Range of frequencies in field map: %f -> %f\n', ...
+    min(min(fm.*msk)),max(max(fm.*msk)));
 
 %% 2. Multfrequency Reconstruction 
 
-tad = 8.192e-3; 
+tad = size(d1,1)*samp;
 fmin = -128;
 fmax = 128; 
 fstep = 16; 
-n = 160; 
-images = [1, 5, 9, 13, 17];
+n = 160;
 
 im_mf = mf_recon(d1, ks, wt, n, te1, tad, fmin, fmax, fstep);
-freqs = fmin:fstep:fmax;
+fs = fmin:fstep:fmax;
 
-for ii = 1:length(images)
-figure(ii+3) 
-imshow(abs(im_mf(:,:,images(ii))),[])
-title(sprintf('Reconstruction at %d Hz', freqs(images(ii))))
+des_freqs = [ -128 -64 0 64 128 ];
+figure(2);
+for ii = 1:numel(des_freqs)
+    subplot(1,numel(des_freqs),ii);
+    imshow(abs(im_mf(:,:,fs == des_freqs(ii))),[]);
+    title(sprintf('@ %d Hz',des_freqs(ii)));
 end
 
 %% 3. Field Map Based Reconstruction
+fms = round((fm - fmin)/fstep) + 1;
+fms = max(fms,1);
+fms = min(fms,numel(fs));
 
+im_mp = zeros(n,n);
+for ii = 1:n
+    for jj = 1:n
+        im_mp(ii,jj) = im_mf(ii,jj,fms(ii,jj));
+    end
+end
 
-im1_fm = im1.*exp(-1i*2*pi*fm);
-figure(9)
-imshow(abs(im1_fm),[])
+figure(3);
+imshow(abs(im_mp),[]);
+title('Map Based Reconstruction');
+
+%% (4) Autofocus Reconstruction
