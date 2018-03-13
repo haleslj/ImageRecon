@@ -8,14 +8,14 @@ close all;
 
 load('brain_8ch.mat');
 
-%% part a: Displaying the data
+%% part 1: Displaying the data
 imax = 1e3;
 % imax = 1.5e3;
 % imax = 2e3;
 figure
 montage(reshape(abs(im),160,220,1,8), [0 imax])
 
-%% part b:  Multicoil Reconstruction
+%% part 2:  Multicoil Reconstruction
 im_rsos = (sum(im.^2,3)).^(1/2);
 figure
 subplot(2,1,2)
