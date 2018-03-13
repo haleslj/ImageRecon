@@ -59,6 +59,7 @@ im_mf = mf_recon(d1, ks, wt, n, te1, tad, fmin, fmax, fstep);
 fs = fmin:fstep:fmax;
 
 des_freqs = [ -128 -64 0 64 128 ];
+% des_freqs = des_freqs/2;
 figure(2);
 for ii = 1:numel(des_freqs)
     subplot(1,numel(des_freqs),ii);
@@ -80,6 +81,91 @@ end
 
 figure(3);
 imshow(abs(im_mp),[]);
-title('Map Based Reconstruction');
+title('Field Map Based Reconstruction');
 
 %% (4) Autofocus Reconstruction
+im_r=mf_recon(d1(1:256,:),ks(1:256,:),wt(1:256,:),n,te1,tad/8,fmin,fmax,fstep);
+pc = exp(-1i*angle(im_r));
+des_freqs_2 = [-128, -64, 0, 64];
+for ii = 1:numel(des_freqs_2)
+    figure (3+ ii)
+    imshow(abs(imag(im_mf(:,:,fs==des_freqs_2(ii)).*pc(:,:,fs==des_freqs_2(ii)))),[])
+    title(sprintf('Unfocused metric with frequency of %dHz',des_freqs_2(ii)))
+end
+
+% part b Focused metric
+fc = abs(imag(im_mf.*pc));
+fcf = 0*fc;
+
+%for each frequency we integrate over a 5x5 window
+for ii = 1:numel(fs)
+    fcf(:,:,ii) = conv2(fc(:,:,ii), ones(5,5)/25, 'same');
+end
+
+for ii = 1:numel(des_freqs_2)
+    figure (6 + ii)
+    imshow(abs(fcf(:,:,fs==des_freqs_2(ii))),[])
+    title(sprintf('Focused metric with frequency of %dHz',des_freqs_2(ii)))
+end
+
+%part c Autofocus reconstruction 
+im_af = zeros(n);
+[minval, minloc] = min(fcf,[],3);
+fm_af = fs(minloc);
+
+for ii = 1:n
+    for jj = 1:n
+        im_af(ii,jj) = im_mf(ii,jj,minloc(ii,jj));
+    end
+end
+figure
+imshow(abs(im_af), [])
+title('Autofocus Reconstructed Image')
+
+figure
+imshow(abs(fm_af), [])
+title('Autofocus Fieldmap')
+
+%%
+% In order to fix the image we should restrict ourselves to the range of
+% values representing one complete clycle so +/-64 Hz. When using that
+% range you can see that the image is much clearer, paricularly the ends of
+% the tines of the comb. 
+
+
+fmin2 = -64;
+fmax2 = 64; 
+fstep = 16; 
+n = 160;
+
+im_mf2 = mf_recon(d1, ks, wt, n, te1, tad, fmin2, fmax2, fstep);
+fs2 = fmin2:fstep:fmax2;
+
+im_r2=mf_recon(d1(1:256,:),ks(1:256,:),wt(1:256,:),n,te1,tad/8,fmin2,fmax2,fstep);
+pc2 = exp(-1i*angle(im_r2));
+
+fc2 = abs(imag(im_mf2.*pc2));
+fcf2 = 0*fc2;
+
+%for each frequency we integrate over a 5x5 window
+for ii = 1:numel(fs2)
+    fcf2(:,:,ii) = conv2(fc2(:,:,ii), ones(5,5)/25, 'same');
+end
+
+%part c Autofocus reconstruction 
+im_af2 = zeros(n);
+[minval2, minloc2] = min(fcf2,[],3);
+fm_af2 = fs2(minloc2);
+
+for ii = 1:n
+    for jj = 1:n
+        im_af2(ii,jj) = im_mf2(ii,jj,minloc2(ii,jj));
+    end
+end
+figure
+imshow(abs(im_af2), [])
+title('Improved Autofocus Reconstructed Image')
+
+figure
+imshow(abs(fm_af2), [])
+title('Improved Autofocus Fieldmap')
